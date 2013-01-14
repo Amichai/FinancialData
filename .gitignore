@@ -1,0 +1,5 @@
+*.suo
+Quant/bin/Debug/
+Quant/obj/
+UI/bin/Debug/
+UI/obj/
