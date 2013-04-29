@@ -6,6 +6,7 @@ using CsvHelper;
 using OxyPlot;
 using System.IO;
 using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace Quant {
     public class DataManager {
@@ -37,25 +38,59 @@ namespace Quant {
 
         }
 
-        public enum DataType { AdjClose, DailyReturns, Volume, Close }
+        public enum DataType { AdjClose, Volume, Close, Open, High, Low }
 
         public TimeSeries Open(string symbl, DataType type, DateTime start, DateTime end) {
-            this.start = start;
-            this.end = end;
-            symbl = symbl.ToUpper();
+            var a = new Quote(symbl);
+            //var doc = a.Fetch(DateTime.Parse("2010-03-5").Date, DateTime.Parse("2011-03-5"));
+            var doc = a.Fetch(start.Date, end);
+            if (doc == null) {
+                throw new Exception();
+            }
+
+            TimeSeries ts = new TimeSeries(symbl);
             if (type == DataType.AdjClose) {
-                return Open(symbolIndex[symbl], 6);
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("Adj_Close").Value));
+                }
             }
+
             if (type == DataType.Volume) {
-                return Open(symbolIndex[symbl], 5);
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("Volume").Value));
+                }
             }
+
             if (type == DataType.Close) {
-                return Open(symbolIndex[symbl], 4);
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("Close").Value));
+                }
             }
-            if (type == DataType.DailyReturns) {
-                return DailyReturns(symbolIndex[symbl]);
+
+            if (type == DataType.Open) {
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("Open").Value));
+                }
             }
-            throw new Exception();
+
+            if (type == DataType.High) {
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("High").Value));
+                }
+            }
+
+            if (type == DataType.Low) {
+                foreach (var quote in doc.Descendants("quote")) {
+                    ts.Add(DateTimeAxis.ToDouble(DateTime.Parse(quote.Element("Date").Value)),
+                        double.Parse(quote.Element("Low").Value));
+                }
+            }
+            return ts;
         }
 
         public TimeSeries DailyReturns(int i) {
@@ -96,7 +131,7 @@ namespace Quant {
                     ts.Add(p.X, p.Y);
                 }
             }
-            catch  (Exception Exception){
+            catch{
 
             }
             return ts;
@@ -107,5 +142,9 @@ namespace Quant {
                 yield return getTitle(i);
             }
         }
+
+        private string urlBase = @"http://download.finance.yahoo.com/d/quotes.csv?s=";
+
+
     }
 }

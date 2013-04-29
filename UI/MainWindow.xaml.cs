@@ -25,8 +25,8 @@ namespace UI {
         public MainWindow() {
             this.DataContext = this;
             InitializeComponent();
-            this.StartDate = "01/01/2002";
-            this.EndDate = "01/01/2013";
+            this.StartDate = "01/01/2012";
+            this.EndDate = DateTime.Now.Date.ToShortDateString();
 
             //A, AA, AAPL, ABC, ABI, ABT, ACE, ACS
             ///Normalize price data by dividing every data set by the first value so that all data sets are relative to /start at 1
@@ -36,7 +36,10 @@ namespace UI {
             this.endDate.TextChanged += new TextChangedEventHandler(endDate_TextChanged);
 
             var ts = this.data.Open("AAPL", DataManager.DataType.AdjClose, DateTime.Parse(this.StartDate), DateTime.Parse(this.EndDate));
-            this.addChart(ts.GetLineSeries().Graph(dateTimeAxis: this.TimeAxis), ts.Name);
+            this.addChart(ts.GetLineSeries().Graph(this.TimeAxis,
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Adjusted Close "}
+                ), ts.Name);
         }
 
         DataManager data = new DataManager();
@@ -76,7 +79,7 @@ namespace UI {
         }
 
 
-        private void addChart(Chart ct, string title) {
+        private void addChart(UserControl ct, string title) {
             this.rightgroup.Children.Insert(0, new LayoutDocument() { Content = ct, Title = title });
             this.rightgroup.Children.First().IsSelected = true;
         }
@@ -125,7 +128,9 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.Close, startDate_dt, endDate_dt);
                 s.Add(getSeries(ts));
             }
-            this.addChart(s.Graph(dateTimeAxis: this.TimeAxis), "Close");
+            this.addChart(s.Graph(this.TimeAxis,
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Close"}), "Close");
         }
 
         private void adjustedClose() {
@@ -134,7 +139,10 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
                 s.Add(getSeries(ts));
             }
-            this.addChart(s.Graph(dateTimeAxis: this.TimeAxis), "AdjClose");
+            this.addChart(s.Graph(this.TimeAxis,
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Adjusted Close"}
+                ), "AdjClose");
         }
 
         private void volume() {
@@ -143,7 +151,9 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.Volume, startDate_dt, endDate_dt);
                 s.Add(getSeries(ts));
             }
-            this.addChart(s.Graph(dateTimeAxis: this.TimeAxis), "Volume");
+            this.addChart(s.Graph(this.TimeAxis,
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Volume"}), "Volume");
         }
 
         private void dailyReturns() {
@@ -152,7 +162,9 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
                 s.Add(getSeries(ts.DailyReturns));
             }
-            this.addChart(s.Graph(dateTimeAxis: this.TimeAxis), "DailyReturns");
+            this.addChart(s.Graph(this.TimeAxis,
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Daily Returns" }), "DailyReturns");
         }
 
         private void drawDowns1() {
@@ -161,7 +173,9 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
                 s.Add(getSeries(ts.DrawDowns));
             }
-            this.addChart(s.Graph(dateTimeAxis: this.TimeAxis), "DrawDowns1");
+            this.addChart(s.Graph(this.TimeAxis, 
+                new DateTimeAxis() { Title = "Date" },
+                new LinearAxis() { Title = "Draw Down"}), "DrawDowns1");
         }
 
         private void drawDowns2() {
@@ -171,7 +185,9 @@ namespace UI {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
                 s.Add(getDistributionSeries(ts.DrawDown2, ts.Name));
             }
-            this.addChart(s.Graph(), "DrawDowns2");
+            this.addChart(s.Graph(false, 
+                new LinearAxis() { Title = "Rank" },
+                new LinearAxis() { Title = "Draw Down"}), "DrawDowns2");
         }
 
         private void LineChart_Click(object sender, RoutedEventArgs e) {
@@ -209,61 +225,206 @@ namespace UI {
             return ts.GraphRankOrder(Name, this.AbsoluteValue, this.LogarithmicY);
         }
 
-        private void DailyReturnsDistribution_Click(object sender, RoutedEventArgs e) {
-            List<ScatterSeries> s = new List<ScatterSeries>();
+        #region Histograms
+        ///TODO: get us multiple stacks of bars 
+        private void dailyClose_hist(){
             foreach (var a in InspectionSymbols) {
-                var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
-                s.Add(getDistributionSeries(ts.DailyReturns.GetRange(), ts.Name));
+                var ts = this.data.Open(a, DataManager.DataType.Close, startDate_dt, endDate_dt);
+                addChart(new ChartingHelper.Histogram(ts.GetRange(), ts.Name + " Daily Close"), ts.Name + " daily close histogram");
             }
-            this.addChart(s.Graph(), "DrawDowns2");
         }
 
-        private void DrawDownHist_Click(object sender, RoutedEventArgs e) {
-            List<RectangleBarSeries> s = new List<RectangleBarSeries>();
+        private void volume_hist() {
+            foreach (var a in InspectionSymbols) {
+                var ts = this.data.Open(a, DataManager.DataType.Volume, startDate_dt, endDate_dt);
+                addChart(new ChartingHelper.Histogram(ts.GetRange(), ts.Name + " Volume"), ts.Name + " volume histogram");
+            }
+        }
+
+        private void dailyReturns_hist() {
             foreach (var a in InspectionSymbols) {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
-                if (binSizeVal == 0) {
-                    s.Add(new Histogram(ts.DrawDowns).GetBarSeries());
-                } else {
-                    s.Add(new Histogram(ts.DrawDowns, binSizeVal).GetBarSeries());
-                }
-                s.Graph().ShowUserControl();
+                addChart(new ChartingHelper.Histogram(ts.DailyReturns.GetRange(), ts.Name + " Daily Returns"), "Histogram");
             }
-            //this.addChart(s.Graph(), "DrawDowns2");
+        }
 
+        private void drawDowns1_hist() {
+            foreach (var a in InspectionSymbols) {
+                var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
+                addChart(new ChartingHelper.Histogram(ts.DrawDowns.GetRange(), ts.Name + " Draw downs 1"), "Histogram");
+            }
+        }
+
+        private void drawDowns2_hist() {
+            foreach (var a in InspectionSymbols) {
+                var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
+                addChart(new ChartingHelper.Histogram(ts.DrawDown2, ts.Name + " Draw downs 2"), "Histogram");
+            }
+        }   
+
+        private void Hist_Click(object sender, RoutedEventArgs e) {
+            string dataType = (string)((ContentControl)this.chartType.SelectedItem).Content;
+            if(dataType == null) return;
+            switch (dataType) {
+                case "Daily Close":
+                    dailyClose_hist();
+                    break;
+                case "Adjusted Close":
+                    adjustedClose_hist();
+                    break;
+                case "Volume":
+                    volume_hist();
+                    break;
+                case "Daily Returns":
+                    dailyReturns_hist();
+                    break;
+                case "Draw Downs 1":
+                    drawDowns1_hist();
+                    break;
+                case "Draw Downs 2":
+                    drawDowns2_hist();
+                    break;
+                default:
+                    throw new Exception();
+            }
+        }
+
+        private void adjustedClose_hist() {
+            foreach (var a in InspectionSymbols) {
+                var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
+                addChart(new ChartingHelper.Histogram(ts.GetRange(), ts.Name), "Histogram");
+            }
         }
 
         private void DailyReturnsHist_Click(object sender, RoutedEventArgs e) {
             List<RectangleBarSeries> s = new List<RectangleBarSeries>();
             foreach (var a in InspectionSymbols) {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
-                if (binSizeVal == 0) {
-                    s.Add(new Histogram(ts.DailyReturns).GetBarSeries());
-                } else {
-                    s.Add(new Histogram(ts.DailyReturns, binSizeVal).GetBarSeries());
-                }
+                s.Add(new Histogram(ts.DailyReturns).GetBarSeries());
+                
                 s.Graph().ShowUserControl();
             }
             this.addChart(s.Graph(), "DrawDowns2");
         }
+        #endregion
 
-        private double binSizeVal;
-        private string _binSize;
+        private TimeSeries getTimeSeries(string symbol, string tsType){
+            switch (tsType) {
+                case "Daily Close":
+                    DataManager.DataType t = DataManager.DataType.Close;
+                    return this.data.Open(symbol, t, startDate_dt, endDate_dt);
+                case "Adjusted Close":
+                    t = DataManager.DataType.AdjClose;
+                    return this.data.Open(symbol, t, startDate_dt, endDate_dt);
+                case "Volume":
+                    t = DataManager.DataType.Volume;
+                    return this.data.Open(symbol, t, startDate_dt, endDate_dt);
+                case "Daily Returns":
+                    t = DataManager.DataType.AdjClose;
+                    return this.data.Open(symbol, t, startDate_dt, endDate_dt).DailyReturns;
+                case "Draw Downs 1":
+                    t = DataManager.DataType.AdjClose;
+                    return this.data.Open(symbol, t, startDate_dt, endDate_dt).DrawDowns;
+                //case "Draw Downs 2":
 
-        public string BinSize {
-            get { return _binSize; }
-            set {
-                _binSize = value;
-                if (!double.TryParse(this.binSize.Text, out binSizeVal)) {
-                    this.binSize.Background = errorColor;
-                } else {
-                    this.binSize.Background = workingColor;
-                }
-                OnPropertyChanged("BinSize");
+                //    break;
+                default:
+                    throw new Exception();
             }
         }
 
+        private void ScatterPlot_Click(object sender, RoutedEventArgs e) {
+            if (InspectionSymbols.Count() < 2 && chartType.SelectedItems.Count < 2) return;
+            //if (InspectionSymbols.Count() < 2) return;
 
+            DataManager.DataType t = DataManager.DataType.AdjClose;
+            TimeSeries ts1, ts2;
+            var selectedItems = this.chartType.SelectedItems;
+
+            string dataType1 = ((ListViewItem)selectedItems[0]).Content as string;
+            string dataType2 = null;
+            if (selectedItems.Count > 1) {
+                dataType2 = ((ListViewItem)selectedItems[1]).Content as string;    
+            }
+            
+            switch (dataType1) {
+                case "Daily Close":
+                    t = DataManager.DataType.Close;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    //ts2 = this.data.Open(InspectionSymbols[1], t, startDate_dt, endDate_dt);
+                    break;
+                case "Adjusted Close":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    //ts2 = this.data.Open(InspectionSymbols[1], t, startDate_dt, endDate_dt);
+                    break;
+                case "Volume":
+                    t = DataManager.DataType.Volume;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    //ts2 = this.data.Open(InspectionSymbols[1], t, startDate_dt, endDate_dt);
+                    break;
+                case "Daily Returns":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt).DailyReturns;
+                    //ts2 = this.data.Open(InspectionSymbols[1], t, startDate_dt, endDate_dt).DailyReturns;
+                    break;
+                case "Draw Downs 1":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt).DrawDowns;
+                    //ts2 = this.data.Open(InspectionSymbols[1], t, startDate_dt, endDate_dt).DrawDowns;
+                    break;
+                case "Draw Downs 2":
+                    return;
+                default:
+                    throw new Exception();
+            }
+            if (dataType2 != null) {
+                ts2 = getTimeSeries(InspectionSymbols[0], dataType2);
+            } else {
+                ts2 = getTimeSeries(InspectionSymbols[1], dataType1);
+            }
+
+            this.addChart(ts1.Correlate2(ts2).Graph(new LinearAxis() { Title = ts1.Name },
+                new LinearAxis() { Title = ts2.Name }),
+                ts1.Name + " " + ts2.Name);
+        }
+
+        private void DayToDayCorrelation_Click(object sender, RoutedEventArgs e) {
+            DataManager.DataType t = DataManager.DataType.AdjClose;
+            TimeSeries ts1;
+            switch ((string)((ContentControl)this.chartType.SelectedItem).Content) {
+                case "Daily Close":
+                    t = DataManager.DataType.Close;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    break;
+                case "Adjusted Close":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    break;
+                case "Volume":
+                    t = DataManager.DataType.Volume;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt);
+                    break;
+                case "Daily Returns":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt).DailyReturns;
+                    break;
+                case "Draw Downs 1":
+                    t = DataManager.DataType.AdjClose;
+                    ts1 = this.data.Open(InspectionSymbols[0], t, startDate_dt, endDate_dt).DrawDowns;
+                    break;
+                case "Draw Downs 2":
+                    return;
+                default:
+                    throw new Exception();
+            }
+
+            this.addChart(ts1.CorrelateWithNextDay().Graph(new LinearAxis() { Title = ts1.Name },
+                new LinearAxis() { Title = "Next day" }),
+                ts1.Name + " " + ts1.Name);
+        }
+
+        #region Properties
         private Brush errorColor = Brushes.LightPink;
         private Brush workingColor = Brushes.LightGreen;
 
@@ -378,14 +539,7 @@ namespace UI {
                 OnPropertyChanged("AbsoluteValue");
             }
         }
-
-        private void binSize_TextChanged(object sender, TextChangedEventArgs e) {
-            if (!double.TryParse(this.binSize.Text, out binSizeVal)) {
-                this.binSize.Background = errorColor;
-            } else {
-                this.binSize.Background = workingColor;
-            }
-        }
+        #endregion
     }
 }
 ////TODO: Event analysis, correlation analysis, 2 variable scatter plots
@@ -393,3 +547,4 @@ namespace UI {
 ///
 
 ///TOdo: three side panes - symbol selection, data filter (adjusted close, volume, draw downs etc), chart type (line, rank order , histogram, etc)
+///Correlation function - corr

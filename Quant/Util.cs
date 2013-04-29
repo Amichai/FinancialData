@@ -61,14 +61,14 @@ namespace Quant {
             return ls;
         }
 
-        public static Chart Graph(this LineSeries series, bool dateTimeAxis = false) {
-            Chart chart = new Chart(dateTimeAxis);
+        public static Chart Graph(this LineSeries series, bool dateTimeAxis = false, Axis xAxis = null, Axis yAxis = null) {
+            Chart chart = new Chart(dateTimeAxis, xAxis, yAxis);
             chart.AddSeries(series);
             return chart;
         }
 
-        public static Chart Graph(this ScatterSeries series) {
-            Chart chart = new Chart(false);
+        public static Chart Graph(this ScatterSeries series, Axis xAxis = null, Axis yAxis = null) {
+            Chart chart = new Chart(false, xAxis, yAxis);
             chart.AddSeries(series);
             return chart;
         }
@@ -81,16 +81,16 @@ namespace Quant {
             return chart;
         }
 
-        public static Chart Graph(this List<ScatterSeries> series, bool dateTimeAxis = false) {
-            Chart chart = new Chart(dateTimeAxis);
+        public static Chart Graph(this List<ScatterSeries> series, bool dateTimeAxis = false, Axis xAxis = null, Axis yAxis = null) {
+            Chart chart = new Chart(dateTimeAxis, xAxis, yAxis);
             foreach (var a in series) {
                 chart.AddSeries(a);
             }
             return chart;         
         }
 
-        public static Chart Graph(this List<LineSeries> series, bool dateTimeAxis = true) {
-            Chart chart = new Chart(dateTimeAxis);
+        public static Chart Graph(this List<LineSeries> series, bool dateTimeAxis = true, Axis xAxis = null, Axis yAxis = null) {
+            Chart chart = new Chart(dateTimeAxis, xAxis, yAxis);
             foreach (var a in series) {
                 chart.AddSeries(a);
             }

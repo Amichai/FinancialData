@@ -47,14 +47,16 @@
                                     <TextBlock>End Date:</TextBlock>
                                     <TextBox Name="endDate" Text="{Binding EndDate}"></TextBox>
                                         <TextBlock>Chart Type:</TextBlock>
-                                        <ListBox Name="chartType" Margin="10">
-                                        <ListBoxItem >Daily Close</ListBoxItem>
-                                        <ListBoxItem>Adjusted Close</ListBoxItem>
-                                        <ListBoxItem>Volume</ListBoxItem>
-                                        <ListBoxItem>Daily Returns</ListBoxItem>
-                                        <ListBoxItem>Draw Downs 1</ListBoxItem>
-                                        <ListBoxItem>Draw Downs 2</ListBoxItem>
-                                    </ListBox>
+                                        <ListView Name="chartType" Margin="10">
+                                            <ListViewItem >Daily Close</ListViewItem >
+                                            <ListViewItem >Adjusted Close</ListViewItem >
+                                            <ListViewItem >Volume</ListViewItem >
+                                            <ListViewItem >Daily Returns
+                                                </ListViewItem >
+                                            <ListViewItem >Draw Downs 1</ListViewItem >
+                                            <ListViewItem >Draw Downs 2
+                                                </ListViewItem >
+                                        </ListView>
                                     <CheckBox IsChecked="{Binding OnlyPositive}">Only positive values</CheckBox>
                                     <CheckBox IsChecked="{Binding OnlyNegative}">Only negative values</CheckBox>
                                     <CheckBox IsChecked="{Binding AbsoluteValue}">Absolute Value</CheckBox>
@@ -77,11 +79,9 @@
                                 <ScrollViewer>
                                     <StackPanel>
                                         <Button Click="LineChart_Click">Line Chart</Button>
-                                        <Button Click="DrawDownHist_Click">Histogram</Button>
-                                        <TextBlock Margin="5,0,0,0">Bin size:</TextBlock>
-                                        <TextBox Name="binSize" Margin="5"></TextBox>
-                                        <CheckBox>Cumulative</CheckBox>
-                                        <Button>Scatter Plot</Button>
+                                        <Button Click="Hist_Click">Histogram</Button>
+                                        <Button Click="ScatterPlot_Click">Scatter Plot</Button>
+                                        <Button Click="DayToDayCorrelation_Click">Day-To-Day Correlation</Button>
                                     </StackPanel>
                                 </ScrollViewer>
                             </ad:LayoutAnchorable>

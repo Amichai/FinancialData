@@ -125,7 +125,7 @@ namespace Quant {
                 sign lastSign = sign.equal;
                 double runningSum = 0;
                 for (int i = DailyReturns.Count() - 1; i >= 0; i--) {
-                    var ret = DailyReturns[i]; 
+                    var ret = DailyReturns[i];
                     if (ret > 0) currentSign = sign.plus;
                     if (ret < 0) currentSign = sign.minus;
                     if (ret == 0) currentSign = sign.equal;
@@ -309,6 +309,110 @@ namespace Quant {
         //Take a data set
         //calculate standard deviation, draw downs, annual return, sharpe, sortino, Jensen's alpha
         //Test correlation between different time series
+
+        public ScatterSeries CorrelateWithNextDay() {
+            ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };
+            bool axis1Direction = this.domain[1] - this.domain[0] > 0;
+            int i = this.Count() - 1;
+            List<IDataPoint> newPoints = new List<IDataPoint>();
+            while (i >= 1) {
+                newPoints.Add(new DataPoint(this.range[i], this.range[--i]));
+            }
+            ss.Points = newPoints;
+            return ss;
+        }
+
+        public ScatterSeries Correlate2(TimeSeries ts2) {
+            ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };
+            bool axis1Direction = this.domain[1] - this.domain[0] > 0;
+            bool axis2Direction = ts2.domain[1] - ts2.domain[0] > 0;
+            int i, j;
+            if (axis1Direction) {
+                i = this.Count() - 1;
+            } else {
+                i = 0;
+            }
+            if (axis2Direction) {
+                j = ts2.Count() - 1;
+            } else {
+                j = 0;
+            }
+
+            List<IDataPoint> newPoints = new List<IDataPoint>();
+            while (i >= 0 && j >= 0 && i < this.Count() && j < ts2.Count()) {
+                double domaini = this.domain[i];
+                double domainj = ts2.domain[j];
+                if (domaini != domainj) {
+                    if (domaini > domainj) {
+                        //Move i
+                        if (axis1Direction) {
+                            i--;
+                        } else {
+                            i++;
+                        }
+                    } else {
+                        //Move j
+                        if (axis2Direction) {
+                            j--;
+                        } else {
+                            j++;
+                        }
+                    }
+                    continue;
+                } else {
+                    newPoints.Add(new DataPoint(this.range[i], ts2.range[j]));
+                    //Move both
+                    if (axis1Direction) {
+                        i--;
+                    } else {
+                        i++;
+                    }
+                    if (axis2Direction) {
+                        j--;
+                    } else {
+                        j++;
+                    }
+                }
+            }
+            ss.Points = newPoints;
+            return ss;
+        }
+
+        public ScatterSeries Correlate(TimeSeries ts2) {
+            ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };
+            bool axis1Direction = this.domain[1] - this.domain[0] > 0;
+            bool axis2Direction = ts2.domain[1] - ts2.domain[0] > 0;
+            int i = this.Count() - 1;
+            int j = ts2.Count() - 1;
+            List<IDataPoint> newPoints = new List<IDataPoint>();
+            while (i >= 0 && j >= 0) {
+                double domaini = this.domain[i];
+                double domainj = ts2.domain[j];
+                if (domaini != domainj) {
+                    if (domaini > domainj) {
+                        if (axis1Direction) {
+                            i--;
+                        } else {
+                            j--;
+                        }
+                    } else {
+                        if (axis2Direction) {
+                            j--;
+                        } else {
+                            i--;
+                        }
+                    }
+                    continue;
+                } else {
+                    newPoints.Add(new DataPoint(this.range[i], ts2.range[j]));
+                    i--;
+                    j--;
+                }
+
+            }
+            ss.Points = newPoints;
+            return ss;
+        }
 
         public ScatterSeries CorrelateDailyReturns(TimeSeries ts2) {
             ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };

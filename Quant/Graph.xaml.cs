@@ -19,11 +19,27 @@ namespace Quant {
     /// </summary>
     public partial class Chart : UserControl {
         PlotModel plot = new PlotModel();
-        public Chart(bool dateTimeAxis = true) {
+        public Chart(bool dateTimeAxis = true, Axis xAxis = null, Axis yAxis = null) {
             InitializeComponent();
             Random rand = new Random();
             if (dateTimeAxis) {
                 plot.Axes.Add(new DateTimeAxis());
+            }
+            if (xAxis != null) {
+                xAxis.Position = AxisPosition.Bottom;
+                if (plot.Axes.Count() > 0) {
+                    plot.Axes[0] = xAxis;
+                } else {
+                    plot.Axes.Add(xAxis);
+                }
+            }
+            if (yAxis != null) {
+                yAxis.Position = AxisPosition.Left;
+                if (plot.Axes.Count() > 1) {
+                    plot.Axes[1] = yAxis;
+                } else {
+                    plot.Axes.Add(yAxis);
+                }
             }
             this.Root.Model = plot;
         }
@@ -59,7 +75,6 @@ namespace Quant {
                 case Key.Escape:
                     ///Close this window
                     throw new NotImplementedException();
-                    break;
             }
         }
     }
