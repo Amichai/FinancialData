@@ -12,6 +12,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
 
 namespace Quant {
     /// <summary>
@@ -41,6 +43,13 @@ namespace Quant {
                     plot.Axes.Add(yAxis);
                 }
             }
+            this.Root.Model = plot;
+        }
+
+        public void AddSeries(CandleStickSeries s) {
+            s.Color = colors[plot.Series.Count() % colors.Count()].ToOxyColor();
+            plot.Series.Add(s);
+            this.Root.Model.IsLegendVisible = false;
             this.Root.Model = plot;
         }
 

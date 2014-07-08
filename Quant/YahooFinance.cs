@@ -23,6 +23,12 @@ namespace Quant {
         }
 
         public static XDocument Fetch(this Quote quote, DateTime startDate, DateTime endDate) {
+            var range = endDate.Subtract(startDate);
+            double years = range.TotalDays / 365.0;
+            for (int i = 0; i < years; i++) {
+
+            }
+
             string symbol = String.Join("%2C", "%22" + quote.Symbol + "%22");
             string baseURL = @"http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20in%20({0})%20and%20startDate%20%3D%20%22{1}%22%20and%20endDate%20%3D%20%22{2}%22&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
             var date1 = startDate.ToString("yyyy-MM-dd");

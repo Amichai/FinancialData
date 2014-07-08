@@ -8,6 +8,8 @@ using System.Windows.Media;
 using OxyPlot;
 using CsvHelper;
 using System.Collections.ObjectModel;
+using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace Quant {
     public static class Util {
@@ -44,7 +46,7 @@ namespace Quant {
                 pts2 = pts.OrderByDescending(i => i).ToList();
             }
             ScatterSeries ls = new ScatterSeries() { Title = name };
-            List<IDataPoint> data = new List<IDataPoint>();
+            
             for (int i = 0; i < pts2.Count(); i++) {
                 double val = pts2[i];
                 if (abs) {
@@ -53,16 +55,29 @@ namespace Quant {
                 if (logy) {
                     val = Math.Log(val);
                 }
-                data.Add(new DataPoint(i, val));
+                ls.Points.Add(new ScatterPoint(i, val));
             }
             ls.MarkerSize = 1;
             ls.MarkerFill = OxyColors.Red;
-            ls.Points = data;
             return ls;
         }
 
         public static Chart Graph(this LineSeries series, bool dateTimeAxis = false, Axis xAxis = null, Axis yAxis = null) {
             Chart chart = new Chart(dateTimeAxis, xAxis, yAxis);
+            chart.AddSeries(series);
+            return chart;
+        }
+
+        public static Chart Graph(this List<CandleStickSeries> series, DateTimeAxis a1, LinearAxis a2) {
+            Chart chart = new Chart(true);
+            foreach (var s in series) {
+                chart.AddSeries(s);
+            }
+            return chart;
+        }
+
+        public static Chart Graph(this CandleStickSeries series, DateTimeAxis a1, LinearAxis a2) {
+            Chart chart = new Chart(true);
             chart.AddSeries(series);
             return chart;
         }
@@ -124,7 +139,7 @@ namespace Quant {
         }
 
         public static OxyPlot.OxyColor ToOxyColor(this Color c) {
-            return new OxyPlot.OxyColor() { A = c.A, B = c.B, G = c.G, R = c.R };
+            return OxyPlot.OxyColor.FromArgb(c.A, c.R, c.G, c.B);
         }
 
         public static ObservableCollection<T> ToObservableCollection<T>(this IEnumerable<T> enumerable) {

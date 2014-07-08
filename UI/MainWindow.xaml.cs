@@ -16,6 +16,8 @@ using Quant;
 using AvalonDock.Layout;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace UI {
     /// <summary>
@@ -25,7 +27,8 @@ namespace UI {
         public MainWindow() {
             this.DataContext = this;
             InitializeComponent();
-            this.StartDate = "01/01/2012";
+
+            this.StartDate = "01/01/2003";
             this.EndDate = DateTime.Now.Date.ToShortDateString();
 
             //A, AA, AAPL, ABC, ABI, ABT, ACE, ACS
@@ -36,9 +39,10 @@ namespace UI {
             this.endDate.TextChanged += new TextChangedEventHandler(endDate_TextChanged);
 
             var ts = this.data.Open("AAPL", DataManager.DataType.AdjClose, DateTime.Parse(this.StartDate), DateTime.Parse(this.EndDate));
+
             this.addChart(ts.GetLineSeries().Graph(this.TimeAxis,
                 new DateTimeAxis() { Title = "Date" },
-                new LinearAxis() { Title = "Adjusted Close "}
+                new LinearAxis() { Title = "Adjusted Close " }
                 ), ts.Name);
         }
 
@@ -190,6 +194,35 @@ namespace UI {
                 new LinearAxis() { Title = "Draw Down"}), "DrawDowns2");
         }
 
+        private void CandleSticks_Click(object sender, RoutedEventArgs e) {
+            List<CandleStickSeries> all = new List<CandleStickSeries>();
+            TimeSeries open, close, high, low;
+            foreach (var a in InspectionSymbols) {
+                this.data.GetOpenCloseHighLow(a, startDate_dt, endDate_dt, out open, out close, out high, out low);
+            
+                CandleStickSeries css = new CandleStickSeries() { StrokeThickness = .5, 
+                    Title = "Candle sticks" };
+                css.Items.Clear();
+                for (int i = 0; i < open.Count(); i++) {
+                    css.Items.Add(
+                        new HighLowItem() {
+                            Open = open.GetRange()[i],
+                            Close = close.GetRange()[i],
+                            High = high.GetRange()[i],
+                            Low = low.GetRange()[i],
+                            X = open.GetDomain()[i]
+                        }
+                        );
+                }
+
+                all.Add(css);
+            }
+                this.addChart(all.Graph(
+                    new DateTimeAxis() { Title = "Date" },
+                    new LinearAxis() { Title = "Close" }), "Close");
+        }
+
+
         private void LineChart_Click(object sender, RoutedEventArgs e) {
             switch ((string)((ContentControl)this.chartType.SelectedItem).Content) {
                 case "Daily Close":
@@ -234,6 +267,7 @@ namespace UI {
             }
         }
 
+        
         private void volume_hist() {
             foreach (var a in InspectionSymbols) {
                 var ts = this.data.Open(a, DataManager.DataType.Volume, startDate_dt, endDate_dt);
@@ -300,6 +334,7 @@ namespace UI {
             List<RectangleBarSeries> s = new List<RectangleBarSeries>();
             foreach (var a in InspectionSymbols) {
                 var ts = this.data.Open(a, DataManager.DataType.AdjClose, startDate_dt, endDate_dt);
+
                 s.Add(new Histogram(ts.DailyReturns).GetBarSeries());
                 
                 s.Graph().ShowUserControl();
@@ -540,6 +575,7 @@ namespace UI {
             }
         }
         #endregion
+
     }
 }
 ////TODO: Event analysis, correlation analysis, 2 variable scatter plots

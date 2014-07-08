@@ -4,17 +4,19 @@ using System.Linq;
 using System.Text;
 using OxyPlot;
 using System.Diagnostics;
+using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace Quant {
     public class TimeSeries {
         List<double> domain;
         List<double> range;
-        IList<IDataPoint> points;
+        List<DataPoint> points;
         public string Name;
         public TimeSeries(string name) {
             this.domain = new List<double>();
             this.range = new List<double>();
-            this.points = new List<IDataPoint>();
+            this.points = new List<DataPoint>();
             this.Name = name;
         }
 
@@ -73,15 +75,11 @@ namespace Quant {
         }
 
         public void LogarithmicX() {
-            foreach (var p in points) {
-                p.X = Math.Log(p.X);
-            }
+            points.ForEach(i => i.X = Math.Log(i.X));
         }
 
         public void LogarithmicY() {
-            foreach (var p in points) {
-                p.Y = Math.Log(p.Y);
-            }
+            points.ForEach(i => i.Y = Math.Log(i.Y));
         }
 
         public TimeSeries GetDiffs() {
@@ -200,14 +198,20 @@ namespace Quant {
         public ScatterSeries ToScatterSeries(string title) {
             var ss = new ScatterSeries() { MarkerSize = 2 };
             ss.Title = title;
-            ss.Points = points;
+            ss.Points.Clear();
+            foreach (var p in points) {
+                ss.Points.Add(new ScatterPoint() { X = p.X, Y = p.Y });
+            }
             return ss;
         }
 
         public LineSeries ToLineSeries(string title) {
             var ls = new LineSeries() { StrokeThickness = .5, CanTrackerInterpolatePoints = false };
             ls.Title = title;
-            ls.Points = points;
+            ls.Points.Clear();
+            foreach (var p in points) {
+                ls.Points.Add(p);
+            }
             return ls;
         }
 
@@ -249,10 +253,10 @@ namespace Quant {
         }
 
         public LineSeries Normalize0() {
-            foreach (var a in points) {
-                a.Y /= StartVal;
-                a.Y -= 1;
-            }
+            points.ForEach(i => {
+                i.Y /= StartVal;
+                i.Y -= 1;
+            });
             return GetLineSeries();
         }
 
@@ -291,14 +295,16 @@ namespace Quant {
         }
 
         public LineSeries Normalize1() {
-            foreach (var a in points) {
-                a.Y /= StartVal;
-            }
+            points.ForEach(i => i.Y /= StartVal);
             return GetLineSeries();
         }
 
         public LineSeries GetLineSeries() {
-            return new LineSeries() { Title = Name, StrokeThickness = .5, Points = points, CanTrackerInterpolatePoints = false };
+            var ls = new LineSeries() { Title = Name, StrokeThickness = .5, CanTrackerInterpolatePoints = false };
+            foreach (var p in points) {
+                ls.Points.Add(p);
+            }
+            return ls;
         }
 
         public void ShowLineGraph(string title = "") {
@@ -314,11 +320,9 @@ namespace Quant {
             ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };
             bool axis1Direction = this.domain[1] - this.domain[0] > 0;
             int i = this.Count() - 1;
-            List<IDataPoint> newPoints = new List<IDataPoint>();
             while (i >= 1) {
-                newPoints.Add(new DataPoint(this.range[i], this.range[--i]));
+                ss.Points.Add(new ScatterPoint(this.range[i], this.range[--i]));
             }
-            ss.Points = newPoints;
             return ss;
         }
 
@@ -338,7 +342,6 @@ namespace Quant {
                 j = 0;
             }
 
-            List<IDataPoint> newPoints = new List<IDataPoint>();
             while (i >= 0 && j >= 0 && i < this.Count() && j < ts2.Count()) {
                 double domaini = this.domain[i];
                 double domainj = ts2.domain[j];
@@ -360,7 +363,7 @@ namespace Quant {
                     }
                     continue;
                 } else {
-                    newPoints.Add(new DataPoint(this.range[i], ts2.range[j]));
+                    ss.Points.Add(new ScatterPoint(this.range[i], ts2.range[j]));
                     //Move both
                     if (axis1Direction) {
                         i--;
@@ -374,7 +377,6 @@ namespace Quant {
                     }
                 }
             }
-            ss.Points = newPoints;
             return ss;
         }
 
@@ -384,7 +386,6 @@ namespace Quant {
             bool axis2Direction = ts2.domain[1] - ts2.domain[0] > 0;
             int i = this.Count() - 1;
             int j = ts2.Count() - 1;
-            List<IDataPoint> newPoints = new List<IDataPoint>();
             while (i >= 0 && j >= 0) {
                 double domaini = this.domain[i];
                 double domainj = ts2.domain[j];
@@ -404,13 +405,12 @@ namespace Quant {
                     }
                     continue;
                 } else {
-                    newPoints.Add(new DataPoint(this.range[i], ts2.range[j]));
+                    ss.Points.Add(new ScatterPoint(this.range[i], ts2.range[j]));
                     i--;
                     j--;
                 }
 
             }
-            ss.Points = newPoints;
             return ss;
         }
 
@@ -418,7 +418,6 @@ namespace Quant {
             ScatterSeries ss = new ScatterSeries() { MarkerSize = .8, MarkerStroke = OxyColors.Blue, MarkerFill = OxyColors.Blue };
             int i = this.DailyReturns.Count() - 1;
             int j = ts2.DailyReturns.Count() - 1;
-            List<IDataPoint> newPoints = new List<IDataPoint>();
             while (i >= 0 && j >= 0) {
                 double domaini = this.DailyReturns.domain[i];
                 double domainj = ts2.DailyReturns.domain[j];
@@ -428,18 +427,21 @@ namespace Quant {
                     } else { j--; }
                     continue;
                 } else {
-                    newPoints.Add(new DataPoint(this.DailyReturns.range[i], ts2.DailyReturns.range[j]));
+                    ss.Points.Add(new ScatterPoint(this.DailyReturns.range[i], ts2.DailyReturns.range[j]));
                     i--;
                     j--;
                 }
 
             }
-            ss.Points = newPoints;
             return ss;
         }
 
         public List<double> GetRange() {
             return range;
+        }
+
+        public List<double> GetDomain() {
+            return domain;
         }
     }
 }

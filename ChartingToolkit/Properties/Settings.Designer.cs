@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace UI.Properties {
+namespace Charting.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

@@ -6,6 +6,7 @@ using System.IO;
 using CsvHelper;
 using OxyPlot;
 using System.Diagnostics;
+using OxyPlot.Series;
 
 namespace Quant {
     class Program {
@@ -20,7 +21,7 @@ namespace Quant {
 
             //var dwj= data.Open(0,6);
             ////dwj.ShowLineGraph();
-            var AAPL = data.Open(3, 3);
+            var AAPL = data.Open(3, start, end, 3);
             AAPL.DrawDown2.Where(i => i > 0).GraphRankOrder("AAPL").Graph();
             AAPL.DrawDown2.Where(i => i < 0).GraphRankOrder("AAPL").Graph();
             AAPL.DailyReturns.RankOrder(true, false).Graph();
@@ -36,7 +37,7 @@ namespace Quant {
             string filepath = "output.csv";
             StreamWriter writer = new StreamWriter(filepath, append: false);
             writer.WriteLine("Name,StartDate,EndDate,StartVal,EndVal,Annual Return,PercentChange,Daily Return StandardDev,Average Daily Return,Max, Min, Max Draw Down");
-            foreach (var close in data.AllAvailable(2)) {
+            foreach (var close in data.AllAvailable(2, start, end)) {
                 List<LineSeries> series = new List<LineSeries>();
                 //var b = new Histogram(a.DrawDowns);
                 //b.ShowGraph();
